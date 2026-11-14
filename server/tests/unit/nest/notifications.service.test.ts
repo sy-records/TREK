@@ -542,7 +542,7 @@ describe('send() — in-app notification content', () => {
       const body = JSON.parse(fetchMock.mock.calls[0][1].body);
       const link = new URL(body.link);
       expect(link.pathname + link.search).toBe(expected);
-    }
+    },
   );
 
   it('NSVC-014 — navigate_target uses /admin for version_available event', async () => {
