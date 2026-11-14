@@ -80,14 +80,22 @@ describe('safe area in the touch shell', () => {
 
   it('FE-MOB-CHROME-007: on a wide window the bars end before the trailing inset, by their box, not a margin', () => {
     const wide = "html:has(.m-shell[data-size='wide'], .m-shell[data-size='split']) .m-bar-x {";
-    expect(css.split(wide)[1]?.split('}')[0] ?? '').toContain('inset-inline-end: calc(16px + var(--m-safe-r-gap, 0px));');
+    expect(css.split(wide)[1]?.split('}')[0] ?? '').toContain(
+      'inset-inline-end: calc(16px + var(--m-safe-r-gap, 0px));'
+    );
     const rtl = `html[dir='rtl']:has(.m-shell[data-size='wide'], .m-shell[data-size='split']) .m-bar-x {`;
-    expect(css.split(rtl)[1]?.split('}')[0] ?? '').toContain('inset-inline-end: calc(16px + var(--m-safe-l-gap, 0px));');
+    expect(css.split(rtl)[1]?.split('}')[0] ?? '').toContain(
+      'inset-inline-end: calc(16px + var(--m-safe-l-gap, 0px));'
+    );
   });
 
   it('FE-MOB-CHROME-008: the page keeps clear of the side insets, the leading one left to the rail on a wide window', () => {
-    expect(css.split('\n.m-page {')[1]?.split('}')[0] ?? '').toContain('margin-inline: var(--m-safe-l, 0px) var(--m-safe-r, 0px);');
-    expect(css.split("html[dir='rtl'] .m-page {")[1]?.split('}')[0] ?? '').toContain('margin-inline: var(--m-safe-r, 0px) var(--m-safe-l, 0px);');
+    expect(css.split('\n.m-page {')[1]?.split('}')[0] ?? '').toContain(
+      'margin-inline: var(--m-safe-l, 0px) var(--m-safe-r, 0px);'
+    );
+    expect(css.split("html[dir='rtl'] .m-page {")[1]?.split('}')[0] ?? '').toContain(
+      'margin-inline: var(--m-safe-r, 0px) var(--m-safe-l, 0px);'
+    );
     const wide = "html:has(.m-shell[data-size='wide'], .m-shell[data-size='split']) .m-page {";
     expect(css.split(wide)[1]?.split('}')[0] ?? '').toContain('margin-inline-start: 0;');
   });
