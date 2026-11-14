@@ -74,8 +74,8 @@ describe('safe area in the touch shell', () => {
   });
 
   it('FE-MOB-CHROME-006: a side inset gets a little air, and none where there is no inset', () => {
-    expect(css).toContain('--m-safe-r-gap: calc(var(--m-safe-r) + min(var(--m-safe-r), 8px));');
-    expect(css).toContain('--m-safe-l-gap: calc(var(--m-safe-l) + min(var(--m-safe-l), 8px));');
+    expect(css).toContain('--m-safe-r-gap: calc(var(--m-bar-r) + min(var(--m-bar-r), 8px));');
+    expect(css).toContain('--m-safe-l-gap: calc(var(--m-bar-l) + min(var(--m-bar-l), 8px));');
   });
 
   it('FE-MOB-CHROME-007: on a wide window the bars end before the trailing inset, by their box, not a margin', () => {
@@ -91,12 +91,26 @@ describe('safe area in the touch shell', () => {
 
   it('FE-MOB-CHROME-008: the page keeps clear of the side insets, the leading one left to the rail on a wide window', () => {
     expect(css.split('\n.m-page {')[1]?.split('}')[0] ?? '').toContain(
-      'margin-inline: var(--m-safe-l, 0px) var(--m-safe-r, 0px);'
+      'margin-inline: var(--m-page-l, 0px) var(--m-page-r, 0px);'
     );
     expect(css.split("html[dir='rtl'] .m-page {")[1]?.split('}')[0] ?? '').toContain(
-      'margin-inline: var(--m-safe-r, 0px) var(--m-safe-l, 0px);'
+      'margin-inline: var(--m-page-r, 0px) var(--m-page-l, 0px);'
     );
     const wide = "html:has(.m-shell[data-size='wide'], .m-shell[data-size='split']) .m-page {";
     expect(css.split(wide)[1]?.split('}')[0] ?? '').toContain('margin-inline-start: 0;');
+  });
+
+  it('FE-MOB-CHROME-009: an element in a top corner moves the bars beside it and the page below it, not a whole strip aside', () => {
+    // The bars avoid the wider of the side inset and the corner element.
+    expect(css).toContain('--m-bar-r: max(var(--m-safe-r), var(--trek-native-corner-right, 0px));');
+    expect(css).toContain('--m-bar-l: max(var(--m-safe-l), var(--trek-native-corner-left, 0px));');
+    // The page gives the corner's width back and starts below the corner instead.
+    expect(css).toContain('--m-page-r: max(0px, var(--m-safe-r) - var(--trek-native-corner-right, 0px));');
+    expect(css).toContain('--m-page-l: max(0px, var(--m-safe-l) - var(--trek-native-corner-left, 0px));');
+    expect(css.split('\n.m-page {')[1]?.split('}')[0] ?? '').toContain(
+      'padding-top: max(0px, calc(var(--m-corner-b, 0px) + 12px - var(--m-safe-top, 12px) - 70px));'
+    );
+    // Without a corner element (every other device, iOS before 26) nothing moves.
+    expect(css).toContain('--m-corner-b: var(--trek-native-corner-bottom, 0px);');
   });
 });
