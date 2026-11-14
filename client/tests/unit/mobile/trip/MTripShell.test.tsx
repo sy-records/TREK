@@ -593,6 +593,15 @@ describe('MTripShell', () => {
     expect(shellApi.collabTab).toBe('notes')
   })
 
+  it('FE-MOB-SHELL-036b: a message notification opens the chat, not the collab part last open', () => {
+    const { planner, rerenderShell } = renderShell({ activeTab: 'collab' } as Partial<TripPlanner>)
+    fireEvent.click(screen.getByRole('button', { name: 'collab.tabs.notes' }))
+    expect(shellApi.collabTab).toBe('notes')
+    planner.tabLink = { tab: 'collab', seq: 1 }
+    rerenderShell()
+    expect(shellApi.collabTab).toBe('chat')
+  })
+
   it('FE-MOB-SHELL-037: setTrTab from a slot routes through the planner and resets browse', () => {
     const { planner } = renderShell()
     fireEvent.click(screen.getByRole('button', { name: 'trip.mobilePlaces' }))

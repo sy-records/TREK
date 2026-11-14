@@ -118,6 +118,16 @@ describe('useNotificationItemActions', () => {
     expect(navigate).toHaveBeenLastCalledWith('/dashboard');
   });
 
+  it('FE-COMP-NOTIFITEM-ACTIONS-006: an old booking mail link names the reservations tab by its id', async () => {
+    const { result } = renderHook(() =>
+      useNotificationItemActions(
+        notification({ title_key: 'notif.mail_booking_added.title', navigate_target: '/trips/7?tab=bookings' })
+      )
+    );
+    await act(() => result.current.handleNavigate());
+    expect(navigate).toHaveBeenLastCalledWith('/trips/7?tab=buchungen');
+  });
+
   it('FE-COMP-NOTIFITEM-ACTIONS-002: navigating marks an unread item read first, then follows and closes', async () => {
     const onClose = vi.fn();
     const { result } = renderHook(() => useNotificationItemActions(notification(), onClose));

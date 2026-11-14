@@ -296,7 +296,7 @@ const EVENT_NOTIFICATION_CONFIG: Record<string, EventNotifConfig> = {
     titleKey: 'notif.mail_booking_added.title',
     textKey: (p) => (p.role === 'traveller' ? MAIL_BOOKING_TEXT.traveller : MAIL_BOOKING_TEXT.forwarder).textKey,
     navigateTextKey: 'notif.action.view_trip',
-    navigateTarget: (p) => (p.tripId ? `/trips/${p.tripId}?tab=bookings` : null),
+    navigateTarget: (p) => (p.tripId ? `/trips/${p.tripId}?tab=buchungen` : null),
   },
   // Bookings from forwarded mails wait in the person's inbox for a decision.
   mail_booking_pending: {

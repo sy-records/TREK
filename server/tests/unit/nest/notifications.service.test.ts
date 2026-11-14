@@ -682,8 +682,8 @@ describe('send() — in-app notification content', () => {
     const notifs = await getInAppNotifications(user.id);
     expect(notifs.map((n) => [n.text_key, n.navigate_target])).toEqual(
       expect.arrayContaining([
-        ['notif.mail_booking_added.text', '/trips/7?tab=bookings'],
-        ['notif.mail_booking_added.shared', '/trips/7?tab=bookings'],
+        ['notif.mail_booking_added.text', '/trips/7?tab=buchungen'],
+        ['notif.mail_booking_added.shared', '/trips/7?tab=buchungen'],
         ['notif.mail_booking_pending.text', '/dashboard?inbox=mail'],
         ['notif.mail_ingest_paused.text', null],
       ]),

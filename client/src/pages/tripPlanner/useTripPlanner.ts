@@ -290,7 +290,10 @@ export function useTripPlanner() {
   }
 
   // Notifications can open a tab while this trip is already mounted, on either layout.
-  useAssistantTabLink({ searchParams, setSearchParams, activeTab, selectTab: handleTabChange })
+  // Each link it takes is counted, so the phone shell can open the right part of the tab.
+  const [tabLink, setTabLink] = useState<{ tab: string; seq: number } | null>(null)
+  const onTabLinked = useCallback((tab: string) => setTabLink(prev => ({ tab, seq: (prev?.seq ?? 0) + 1 })), [])
+  useAssistantTabLink({ searchParams, setSearchParams, activeTab, selectTab: handleTabChange, onLinked: onTabLinked })
 
   // handleTabChange is where a tab's lazy load and its session memory happen, and
   // the tab we *start* on never goes through it — neither a ?tab= deep link nor a
@@ -741,7 +744,7 @@ export function useTripPlanner() {
     dawarichTrailShown, toggleDawarichTrail, dawarichTrail, dawarichHiddenDates, dawarichEnabled: !!enabledAddons.dawarich,
     followTrack, roadtripViaCounts,
     allowedFileTypes, tripMembers, setTripMembers, refreshMembers, loadAccommodations,
-    TRANSPORT_TYPES, TRIP_TABS, activeTab, setActiveTab, handleTabChange,
+    TRANSPORT_TYPES, TRIP_TABS, activeTab, setActiveTab, handleTabChange, tabLink,
     leftWidth, rightWidth, leftCollapsed, rightCollapsed, setLeftCollapsed, setRightCollapsed,
     leftHidden, rightHidden, toggleLeft, toggleRight, narrowPanels,
     startResizeLeft, startResizeRight, nudgeLeft, nudgeRight, resizeMin, resizeMax,

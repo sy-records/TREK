@@ -340,6 +340,13 @@ export default function MTripShell({
     if (mode === 'browse') setMode('go')
   }
 
+  // A notification link opens its tab the way the dock does, and a message one the chat.
+  useEffect(() => {
+    if (!planner.tabLink) return
+    setMode(m => (m === 'browse' ? 'go' : m))
+    if (planner.tabLink.tab === 'collab') setCollabTab('chat')
+  }, [planner.tabLink])
+
   const setTravelMode = (next: MTripMode) => {
     setBrowseFromEdit(next === 'browse' && mode === 'edit')
     setMode(next)

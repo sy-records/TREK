@@ -14,7 +14,8 @@ function notificationTarget(notification: InAppNotification): string | null {
       (notification.scope === 'trip' && notification.target > 0 ? String(notification.target) : null);
     return tripId ? `/trips/${tripId}?tab=collab` : '/dashboard';
   }
-  return notification.navigate_target;
+  // Booking mails used to link a tab by its English name, which the planner does not have.
+  return notification.navigate_target?.replace(/([?&]tab=)bookings(?=&|#|$)/, '$1buchungen') ?? null;
 }
 
 /** Compact relative timestamp ("5m" / "3h" / "2d"); under a minute it reads `justNow`. */
