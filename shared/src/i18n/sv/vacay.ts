@@ -61,6 +61,7 @@ const vacay: TranslationStrings = {
   'vacay.carriedOver': 'från {year}',
   'vacay.blockWeekends': 'Blockera Helger',
   'vacay.blockWeekendsHint': 'Förhindra att semesterdagar läggs in på helgdagar',
+  'vacay.weekendDays': 'Helgdagar',
   'vacay.mon': 'Mån',
   'vacay.tue': 'Tis',
   'vacay.wed': 'Ons',

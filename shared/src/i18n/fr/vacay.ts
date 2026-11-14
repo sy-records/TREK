@@ -61,6 +61,7 @@ const vacay: TranslationStrings = {
   'vacay.used': 'Utilisés',
   'vacay.remaining': 'Restants',
   'vacay.carriedOver': 'de {year}',
+  'vacay.weekendDays': 'Jours de week-end',
   'vacay.mon': 'Lun',
   'vacay.tue': 'Mar',
   'vacay.wed': 'Mer',

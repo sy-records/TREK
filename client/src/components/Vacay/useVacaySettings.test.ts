@@ -110,24 +110,13 @@ describe('useVacaySettings', () => {
     expect(result.current.weekendDays).toEqual([5, 6]);
   });
 
-  it.each([
-    [6, 0],
-    [0, 6],
-  ])('keeps day %i deselected when the last selected day %i is then removed', (first, last) => {
+  it.each([['6'], ['5']])('keeps the last weekend day %s selected instead of saving an empty value', (only) => {
+    useVacayStore.setState({ plan: plan({ weekend_days: only }) });
     const { result } = renderHook(() => useVacaySettings({ language: 'en', loadCountries: false }));
+    expect(result.current.weekendDays).toEqual([Number(only)]);
 
-    act(() => result.current.toggleWeekendDay(first));
-    expect(updatePlan).toHaveBeenLastCalledWith({ weekend_days: String(last) });
-    act(() => useVacayStore.setState({ plan: plan({ weekend_days: String(last) }) }));
-    expect(result.current.weekendDays).toEqual([last]);
-
-    act(() => result.current.toggleWeekendDay(last));
-    expect(updatePlan).toHaveBeenLastCalledWith({ weekend_days: String(first) });
-    act(() => useVacayStore.setState({ plan: plan({ weekend_days: String(first) }) }));
-    expect(result.current.weekendDays).toEqual([first]);
-
-    act(() => result.current.toggleWeekendDay(last));
-    expect(updatePlan).toHaveBeenLastCalledWith({ weekend_days: `${first},${last}` });
+    act(() => result.current.toggleWeekendDay(Number(only)));
+    expect(updatePlan).not.toHaveBeenCalled();
   });
 
   it('FE-COMP-VACAYSET-005: dissolving toasts and then hands over', async () => {
