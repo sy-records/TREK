@@ -18,6 +18,7 @@ import { IDP_LOGIN_URL, useLogin } from './login/useLogin';
 import LoginWorld from './login/LoginWorld';
 import NativeServerLink from './login/NativeServerLink';
 import MfaCodeStep from './login/MfaCodeStep';
+import { LANGUAGE_CORNER_CLASS } from './login/languageCorner';
 import PasswordChecklist from '../components/shared/PasswordChecklist';
 
 /** Fixed so the sky does not reshuffle on every render. */
@@ -228,10 +229,7 @@ export default function LoginPage(): React.ReactElement {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'var(--font-system)', position: 'relative' }}>
-      {/* Language dropdown, below the status bar in the app and under a notch, not behind them, and
-          beside an element in the top corner, such as an iPhone Duo's status capsule. The insets the
-          iOS app measures (--trek-native-*) are a floor under env(), as in the touch shell. */}
-      <div className="absolute end-[calc(16px+max(env(safe-area-inset-right,0px),var(--trek-native-safe-right,0px),var(--trek-native-corner-right,0px)))] top-[calc(max(env(safe-area-inset-top,0px),var(--trek-native-safe-top,0px))+16px)] z-10 rtl:end-[calc(16px+max(env(safe-area-inset-left,0px),var(--trek-native-safe-left,0px),var(--trek-native-corner-left,0px)))]">
+      <div className={LANGUAGE_CORNER_CLASS}>
         <button type="button"
           onClick={(e) => {
             e.stopPropagation();
