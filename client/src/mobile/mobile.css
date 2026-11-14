@@ -70,6 +70,11 @@
   --m-safe-l: max(env(safe-area-inset-left, 0px), var(--trek-native-safe-left, 0px));
   --m-safe-r: max(env(safe-area-inset-right, 0px), var(--trek-native-safe-right, 0px));
   --m-safe-top: calc(var(--m-safe-t) + 12px);
+  /* A side inset plus a little air, for the floating bars: next to a Duo's
+   * status capsule a bar that ends exactly at the inset reads as touching it.
+   * Without an inset the air is 0 too (min() of 0 and 8px). */
+  --m-safe-l-gap: calc(var(--m-safe-l) + min(var(--m-safe-l), 8px));
+  --m-safe-r-gap: calc(var(--m-safe-r) + min(var(--m-safe-r), 8px));
   /* The navigation rail's share of the leading edge (wide windows only), what
    * every full-width fixed bar and the page column start after. */
   --m-rail-w: 0px;
@@ -583,10 +588,41 @@ html[dir='rtl']:has(.m-shell[data-size='wide'], .m-shell[data-size='split']) .m-
    On a wide window the rail takes the leading side and a bar may centre itself
    (mx-auto). */
 html:not(:has(.m-shell[data-size='wide'], .m-shell[data-size='split'])) :is(.m-bar-x, .m-span-x) {
-  margin-inline: var(--m-safe-l, 0px) var(--m-safe-r, 0px);
+  margin-inline: var(--m-safe-l-gap, 0px) var(--m-safe-r-gap, 0px);
 }
 html[dir='rtl']:not(:has(.m-shell[data-size='wide'], .m-shell[data-size='split'])) :is(.m-bar-x, .m-span-x) {
+  margin-inline: var(--m-safe-r-gap, 0px) var(--m-safe-l-gap, 0px);
+}
+/* On a wide window the rail holds the leading side; the trailing side still
+   has the screen's inset, which on an unfolded Duo is its status capsule, so
+   the top bar's avatar no longer sits under it (TestFlight feedback). The box
+   the bar is placed in ends earlier rather than the bar taking a margin, so a
+   bar that centres itself (mx-auto) still does. */
+html:has(.m-shell[data-size='wide'], .m-shell[data-size='split']) .m-bar-x {
+  inset-inline-end: calc(16px + var(--m-safe-r-gap, 0px));
+}
+html:has(.m-shell[data-size='wide'], .m-shell[data-size='split']) .m-span-x {
+  inset-inline-end: var(--m-safe-r-gap, 0px);
+}
+html[dir='rtl']:has(.m-shell[data-size='wide'], .m-shell[data-size='split']) .m-bar-x {
+  inset-inline-end: calc(16px + var(--m-safe-l-gap, 0px));
+}
+html[dir='rtl']:has(.m-shell[data-size='wide'], .m-shell[data-size='split']) .m-span-x {
+  inset-inline-end: var(--m-safe-l-gap, 0px);
+}
+/* The page itself keeps clear of the sides' safe area, as iOS asks of every
+   app: on a Duo the status capsule stands in the right inset, and cards under
+   the top bar ran beneath it (TestFlight feedback). Margins, so the rail's
+   wide:ps on the same element stays; fixed layers are the window's and keep
+   their own rules. The rail already takes the leading inset on a wide window. */
+.m-page {
+  margin-inline: var(--m-safe-l, 0px) var(--m-safe-r, 0px);
+}
+html[dir='rtl'] .m-page {
   margin-inline: var(--m-safe-r, 0px) var(--m-safe-l, 0px);
+}
+html:has(.m-shell[data-size='wide'], .m-shell[data-size='split']) .m-page {
+  margin-inline-start: 0;
 }
 /* A screen whose background is a map reaches under the rail: the map runs to
    the window's edge and the rail floats over it like the top controls do. Its

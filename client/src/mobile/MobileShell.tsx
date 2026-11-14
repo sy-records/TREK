@@ -89,7 +89,7 @@ export default function MobileShell({ isPhone, children }: MobileShellProps) {
       {!inTripPlanner && wide && (
         <ErrorBoundary boundaryId="chrome:m-nav-rail" fallback={null}><MNavRail /></ErrorBoundary>
       )}
-      <div ref={pageRef} className="flex-1 wide:ps-[var(--m-rail-w)]">{children}</div>
+      <div ref={pageRef} className="m-page flex-1 wide:ps-[var(--m-rail-w)]">{children}</div>
       <MEdgeBack target={pageRef} enabled={edgeBack} />
       {!inTripPlanner && !wide && (
         <ErrorBoundary boundaryId="chrome:m-bottom-nav" fallback={null}><MBottomNav /></ErrorBoundary>
