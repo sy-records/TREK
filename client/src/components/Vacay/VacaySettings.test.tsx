@@ -303,6 +303,52 @@ describe('VacaySettings', () => {
     expect(swatches.length).toBe(12)
   })
 
+  it('FE-COMP-VACAYSETTINGS-015: school holiday add button matches public holiday styling', () => {
+    seedStore(useVacayStore, {
+      plan: { ...basePlan, holidays_enabled: true, school_holidays_enabled: true, holiday_calendars: [] },
+      isFused: false,
+      users: [],
+    })
+    render(<VacaySettings onClose={vi.fn()} />)
+
+    const addButtons = screen.getAllByRole('button', { name: /addCalendar|add calendar|\+/i })
+    expect(addButtons).toHaveLength(2)
+    expect(addButtons[1].className).toBe(addButtons[0].className)
+    expect((addButtons[1] as HTMLButtonElement).style.cssText).toBe((addButtons[0] as HTMLButtonElement).style.cssText)
+  })
+
+  it('FE-COMP-VACAYSETTINGS-016: only one color picker stays open and outside click closes it', async () => {
+    const user = userEvent.setup()
+    seedStore(useVacayStore, {
+      plan: {
+        ...basePlan,
+        holidays_enabled: true,
+        holiday_calendars: [
+          { id: 5, plan_id: 1, region: 'DE', color: '#fecaca', label: null, sort_order: 0 },
+          { id: 6, plan_id: 1, region: 'FR', color: '#fed7aa', label: null, sort_order: 1 },
+        ],
+      },
+      isFused: false,
+      users: [],
+    })
+    render(<VacaySettings onClose={vi.fn()} />)
+
+    const colorButtons = screen.getAllByRole('button').filter(button =>
+      (button as HTMLButtonElement).style.width === '28px' && (button as HTMLButtonElement).style.height === '28px'
+    )
+    await user.click(colorButtons[0])
+    expect(screen.getAllByRole('button', { name: /^#[0-9a-f]{6}$/i })).toHaveLength(12)
+    const pickerPanel = document.querySelector('[data-vacay-color-picker] > div') as HTMLDivElement
+    expect(pickerPanel.style.width).toBe('126px')
+    expect(pickerPanel.style.padding).toBe('8px')
+
+    await user.click(colorButtons[1])
+    expect(screen.getAllByRole('button', { name: /^#[0-9a-f]{6}$/i })).toHaveLength(12)
+
+    await user.click(document.body)
+    expect(screen.queryAllByRole('button', { name: /^#[0-9a-f]{6}$/i })).toHaveLength(0)
+  })
+
   it('FE-COMP-VACAYSETTINGS-013: clicking a color swatch calls onUpdate with new color', async () => {
     const user = userEvent.setup()
     const updateHolidayCalendar = vi.fn().mockResolvedValue(undefined)

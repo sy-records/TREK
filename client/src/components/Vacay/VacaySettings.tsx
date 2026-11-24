@@ -20,6 +20,17 @@ export default function VacaySettings({ onClose }: VacaySettingsProps) {
   const { plan, updatePlan, addHolidayCalendar, updateHolidayCalendar, deleteHolidayCalendar, isFused, users } = useVacayStore()
   const [showAddForm, setShowAddForm] = useState(false)
   const [showAddSchoolForm, setShowAddSchoolForm] = useState(false)
+  const [openColorPicker, setOpenColorPicker] = useState<string | null>(null)
+
+  useEffect(() => {
+    const closePickerOnOutsideClick = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[data-vacay-color-picker]')) {
+        setOpenColorPicker(null)
+      }
+    }
+    document.addEventListener('pointerdown', closePickerOnOutsideClick)
+    return () => document.removeEventListener('pointerdown', closePickerOnOutsideClick)
+  }, [])
 
   const { language } = useTranslation()
 
@@ -166,6 +177,8 @@ export default function VacaySettings({ onClose }: VacaySettingsProps) {
                 countries={countries}
                 language={language}
                 calendarType="public_holiday"
+                colorPickerOpen={openColorPicker === `calendar-${cal.id}`}
+                onColorPickerOpenChange={(open) => setOpenColorPicker(open ? `calendar-${cal.id}` : null)}
                 onUpdate={(data) => updateHolidayCalendar(cal.id, data)}
                 onDelete={() => deleteHolidayCalendar(cal.id)}
               />
@@ -175,6 +188,8 @@ export default function VacaySettings({ onClose }: VacaySettingsProps) {
                 countries={countries}
                 language={language}
                 calendarType="public_holiday"
+                colorPickerOpen={openColorPicker === 'add-public'}
+                onColorPickerOpenChange={(open) => setOpenColorPicker(open ? 'add-public' : null)}
                 onAdd={async (data) => { await addHolidayCalendar({ ...data, type: 'public_holiday' }); setShowAddForm(false) }}
                 onCancel={() => setShowAddForm(false)}
               />
@@ -214,6 +229,8 @@ export default function VacaySettings({ onClose }: VacaySettingsProps) {
                 countries={schoolHolidayCountries}
                 language={language}
                 calendarType="school_holiday"
+                colorPickerOpen={openColorPicker === `calendar-${cal.id}`}
+                onColorPickerOpenChange={(open) => setOpenColorPicker(open ? `calendar-${cal.id}` : null)}
                 onUpdate={(data) => updateHolidayCalendar(cal.id, data)}
                 onDelete={() => deleteHolidayCalendar(cal.id)}
               />
@@ -224,13 +241,16 @@ export default function VacaySettings({ onClose }: VacaySettingsProps) {
                 language={language}
                 calendarType="school_holiday"
                 defaultColor="#a5f3fc"
+                colorPickerOpen={openColorPicker === 'add-school'}
+                onColorPickerOpenChange={(open) => setOpenColorPicker(open ? 'add-school' : null)}
                 onAdd={async (data) => { await addHolidayCalendar({ ...data, type: 'school_holiday' }); setShowAddSchoolForm(false) }}
                 onCancel={() => setShowAddSchoolForm(false)}
               />
             ) : (
               <button type="button"
                 onClick={() => setShowAddSchoolForm(true)}
-                className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded-md transition-colors text-content-muted bg-surface-secondary"
+                className="w-full flex items-center justify-center gap-1.5 text-xs font-medium py-2.5 rounded-xl border border-dashed transition-colors"
+                style={{ borderColor: 'var(--vg-line2)', background: 'var(--vg-surf)', color: 'var(--vg-ink2)' }}
               >
                 <Plus size={12} />
                 {t('vacay.addCalendar')}
@@ -404,11 +424,13 @@ function SettingToggle({ icon: Icon, label, hint, value, onChange }: SettingTogg
 }
 
 // ── Existing calendar row (inline edit) ──────────────────────────────────────
-function CalendarRow({ cal, countries, calendarType, onUpdate, onDelete }: {
+function CalendarRow({ cal, countries, calendarType, colorPickerOpen, onColorPickerOpenChange, onUpdate, onDelete }: {
   cal: VacayHolidayCalendar
   countries: { value: string; label: string }[]
   language: string
   calendarType: 'public_holiday' | 'school_holiday'
+  colorPickerOpen: boolean
+  onColorPickerOpenChange: (open: boolean) => void
   onUpdate: (data: { region?: string; color?: string; label?: string | null }) => void
   onDelete: () => void
 }) {
@@ -422,26 +444,15 @@ function CalendarRow({ cal, countries, calendarType, onUpdate, onDelete }: {
   useEffect(() => { setLocalColor(cal.color) }, [cal.color])
   useEffect(() => { setLocalLabel(cal.label || '') }, [cal.label])
 
-  const PRESET_COLORS = ['#fecaca', '#fed7aa', '#fde68a', '#bbf7d0', '#a5f3fc', '#c7d2fe', '#e9d5ff', '#fda4af', '#6366f1', '#ef4444', '#22c55e', '#3b82f6']
-  const [showColorPicker, setShowColorPicker] = useState(false)
-
   return (
     <div className="flex gap-3 items-start p-3 rounded-xl" style={{ background: 'var(--vg-surf)', border: '1px solid var(--vg-line)' }}>
-      <div style={{ position: 'relative', flexShrink: 0 }}>
-        <button type="button"
-          onClick={() => setShowColorPicker(!showColorPicker)}
-          style={{ width: 28, height: 28, borderRadius: 8, background: localColor, border: '2px solid var(--border-primary)', cursor: 'pointer' }}
-          title={t('vacay.calendarColor')}
-        />
-        {showColorPicker && (
-          <div style={{ position: 'absolute', top: 34, insetInlineStart: 0, zIndex: 50, background: 'var(--bg-card)', border: '1px solid var(--border-primary)', borderRadius: 12, padding: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, width: 120 }}>
-            {PRESET_COLORS.map(c => (
-              <button type="button" key={c} onClick={() => { setLocalColor(c); setShowColorPicker(false); if (c !== cal.color) onUpdate({ color: c }) }}
-                style={{ width: 24, height: 24, borderRadius: 6, background: c, border: localColor === c ? '2px solid var(--text-primary)' : '2px solid transparent', cursor: 'pointer' }} />
-            ))}
-          </div>
-        )}
-      </div>
+      <ColorPicker
+        color={localColor}
+        open={colorPickerOpen}
+        onOpenChange={onColorPickerOpenChange}
+        onSelect={c => { setLocalColor(c); onColorPickerOpenChange(false); if (c !== cal.color) onUpdate({ color: c }) }}
+        title={t('vacay.calendarColor')}
+      />
       <div className="flex-1 min-w-0 space-y-1.5">
         <input
           type="text"
@@ -483,10 +494,12 @@ function CalendarRow({ cal, countries, calendarType, onUpdate, onDelete }: {
 }
 
 // ── Add-new-calendar form ─────────────────────────────────────────────────────
-function AddCalendarForm({ countries, calendarType, onAdd, onCancel, defaultColor = '#fecaca' }: {
+function AddCalendarForm({ countries, calendarType, colorPickerOpen, onColorPickerOpenChange, onAdd, onCancel, defaultColor = '#fecaca' }: {
   countries: { value: string; label: string }[]
   language: string
   calendarType: 'public_holiday' | 'school_holiday'
+  colorPickerOpen: boolean
+  onColorPickerOpenChange: (open: boolean) => void
   onAdd: (data: { region: string; color: string; label: string | null }) => void
   onCancel: () => void
   defaultColor?: string
@@ -505,26 +518,15 @@ function AddCalendarForm({ countries, calendarType, onAdd, onCancel, defaultColo
   // draws nothing (#1813). The button shows a spinner so the wait is visible.
   const canAdd = canAddHolidayCalendar(selectedCountry, region, regionOptions)
 
-  const PRESET_COLORS = ['#fecaca', '#fed7aa', '#fde68a', '#bbf7d0', '#a5f3fc', '#c7d2fe', '#e9d5ff', '#fda4af', '#6366f1', '#ef4444', '#22c55e', '#3b82f6']
-  const [showColorPicker, setShowColorPicker] = useState(false)
-
   return (
     <div className="flex gap-3 items-start p-3 rounded-xl border border-dashed" style={{ borderColor: 'var(--vg-line2)', background: 'var(--vg-surf)' }}>
-      <div style={{ position: 'relative', flexShrink: 0 }}>
-        <button type="button"
-          onClick={() => setShowColorPicker(!showColorPicker)}
-          style={{ width: 28, height: 28, borderRadius: 8, background: color, border: '2px solid var(--border-primary)', cursor: 'pointer' }}
-          title={t('vacay.calendarColor')}
-        />
-        {showColorPicker && (
-          <div style={{ position: 'absolute', top: 34, insetInlineStart: 0, zIndex: 50, background: 'var(--bg-card)', border: '1px solid var(--border-primary)', borderRadius: 12, padding: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, width: 120 }}>
-            {PRESET_COLORS.map(c => (
-              <button type="button" key={c} onClick={() => { setColor(c); setShowColorPicker(false) }}
-                style={{ width: 24, height: 24, borderRadius: 6, background: c, border: color === c ? '2px solid var(--text-primary)' : '2px solid transparent', cursor: 'pointer' }} />
-            ))}
-          </div>
-        )}
-      </div>
+      <ColorPicker
+        color={color}
+        open={colorPickerOpen}
+        onOpenChange={onColorPickerOpenChange}
+        onSelect={c => { setColor(c); onColorPickerOpenChange(false) }}
+        title={t('vacay.calendarColor')}
+      />
       <div className="flex-1 min-w-0 space-y-1.5">
         <input
           type="text"
@@ -568,6 +570,36 @@ function AddCalendarForm({ countries, calendarType, onAdd, onCancel, defaultColo
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+const HOLIDAY_PRESET_COLORS = ['#fecaca', '#fed7aa', '#fde68a', '#bbf7d0', '#a5f3fc', '#c7d2fe', '#e9d5ff', '#fda4af', '#6366f1', '#ef4444', '#22c55e', '#3b82f6']
+
+function ColorPicker({ color, open, onOpenChange, onSelect, title }: {
+  color: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSelect: (color: string) => void
+  title: string
+}) {
+  return (
+    <div data-vacay-color-picker="" style={{ position: 'relative', flexShrink: 0 }}>
+      <button type="button"
+        aria-label={title}
+        aria-expanded={open}
+        onClick={() => onOpenChange(!open)}
+        style={{ width: 28, height: 28, borderRadius: 8, background: color, border: '2px solid var(--border-primary)', cursor: 'pointer' }}
+        title={title}
+      />
+      {open && (
+        <div style={{ position: 'absolute', top: 34, insetInlineStart: 0, zIndex: 50, background: 'var(--bg-card)', border: '1px solid var(--border-primary)', borderRadius: 12, padding: 8, boxSizing: 'border-box', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, width: 126 }}>
+          {HOLIDAY_PRESET_COLORS.map(c => (
+            <button type="button" key={c} aria-label={c} onClick={() => onSelect(c)}
+              style={{ width: 24, height: 24, borderRadius: 6, background: c, border: color === c ? '2px solid var(--text-primary)' : '2px solid transparent', cursor: 'pointer' }} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

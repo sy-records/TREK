@@ -15,7 +15,7 @@ import { FALLBACK_PERSON_COLOR } from './vacayDayModel'
 import type { VacayHolidayCalendar } from '../../../types'
 import { INNER_CLS, TileHeader } from '../trip/sheets/MTripSheetUi'
 
-const CALENDAR_COLORS = ['#fecaca', '#fed7aa', '#fde68a', '#bbf7d0', '#a5f3fc', '#c7d2fe', '#e9d5ff', '#fda4af']
+const CALENDAR_COLORS = ['#fecaca', '#fed7aa', '#fde68a', '#bbf7d0', '#a5f3fc', '#c7d2fe', '#e9d5ff', '#fda4af', '#6366f1', '#ef4444', '#22c55e', '#3b82f6']
 
 interface Option { value: string; label: string }
 
@@ -37,6 +37,17 @@ export default function MVacaySettingsSheet({ open, onClose }: MVacaySettingsShe
   const { plan, updatePlan, addHolidayCalendar, updateHolidayCalendar, deleteHolidayCalendar, isFused, users } = useVacayStore()
   const [showAddForm, setShowAddForm] = useState(false)
   const [showAddSchoolForm, setShowAddSchoolForm] = useState(false)
+  const [openColorPicker, setOpenColorPicker] = useState<string | null>(null)
+
+  useEffect(() => {
+    const closePickerOnOutsideClick = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[data-vacay-color-picker]')) {
+        setOpenColorPicker(null)
+      }
+    }
+    document.addEventListener('pointerdown', closePickerOnOutsideClick)
+    return () => document.removeEventListener('pointerdown', closePickerOnOutsideClick)
+  }, [])
   const {
     countries, publicHolidayCalendars, schoolHolidayCalendars, weekendDays, toggleWeekendDay, dissolveFusion, confirmingDissolve, askDissolve, cancelDissolve,
   } = useVacaySettings({ language, loadCountries: open })
@@ -178,6 +189,8 @@ export default function MVacaySettingsSheet({ open, onClose }: MVacaySettingsShe
                 cal={cal}
                 countries={countries}
                 calendarType="public_holiday"
+                colorPickerOpen={openColorPicker === `calendar-${cal.id}`}
+                onColorPickerOpenChange={open => setOpenColorPicker(open ? `calendar-${cal.id}` : null)}
                 onUpdate={data => updateHolidayCalendar(cal.id, data)}
                 onDelete={() => deleteHolidayCalendar(cal.id)}
               />
@@ -186,6 +199,8 @@ export default function MVacaySettingsSheet({ open, onClose }: MVacaySettingsShe
               <AddCalendarDraft
                 countries={countries}
                 calendarType="public_holiday"
+                colorPickerOpen={openColorPicker === 'add-public'}
+                onColorPickerOpenChange={open => setOpenColorPicker(open ? 'add-public' : null)}
                 onAdd={async data => { await addHolidayCalendar({ ...data, type: 'public_holiday' }); setShowAddForm(false) }}
                 onCancel={() => setShowAddForm(false)}
               />
@@ -222,6 +237,8 @@ export default function MVacaySettingsSheet({ open, onClose }: MVacaySettingsShe
                 cal={cal}
                 countries={schoolHolidayCountries}
                 calendarType="school_holiday"
+                colorPickerOpen={openColorPicker === `calendar-${cal.id}`}
+                onColorPickerOpenChange={open => setOpenColorPicker(open ? `calendar-${cal.id}` : null)}
                 onUpdate={data => updateHolidayCalendar(cal.id, data)}
                 onDelete={() => deleteHolidayCalendar(cal.id)}
               />
@@ -230,6 +247,8 @@ export default function MVacaySettingsSheet({ open, onClose }: MVacaySettingsShe
               <AddCalendarDraft
                 countries={schoolHolidayCountries}
                 calendarType="school_holiday"
+                colorPickerOpen={openColorPicker === 'add-school'}
+                onColorPickerOpenChange={open => setOpenColorPicker(open ? 'add-school' : null)}
                 onAdd={async data => { await addHolidayCalendar({ ...data, type: 'school_holiday' }); setShowAddSchoolForm(false) }}
                 onCancel={() => setShowAddSchoolForm(false)}
               />
@@ -397,26 +416,27 @@ function SelectRow({ value, placeholder, options, onChange }: {
   )
 }
 
-/** Color swatch that expands into the pastel preset palette. */
-function ColorSwatch({ color, onPick }: { color: string; onPick: (color: string) => void }) {
+/** Color swatch that expands into the shared pastel preset palette. */
+function ColorSwatch({ color, open, onOpenChange, onPick }: { color: string; open: boolean; onOpenChange: (open: boolean) => void; onPick: (color: string) => void }) {
   const { t } = useTranslation()
-  const [openPalette, setOpenPalette] = useState(false)
   return (
-    <span className="relative flex-none">
+    <span data-vacay-color-picker="" className="relative flex-none">
       <button
         type="button"
-        onClick={() => setOpenPalette(o => !o)}
+        onClick={() => onOpenChange(!open)}
+        aria-expanded={open}
         aria-label={t('vacay.calendarColor')}
         className="block h-[26px] w-[26px] rounded-lg"
         style={{ background: color }}
       />
-      {openPalette && (
-        <span className="absolute start-0 top-[32px] z-10 grid w-[124px] grid-cols-4 gap-1 rounded-xl border border-[color:var(--m-rowbr)] bg-[color:var(--m-sheetop)] p-2 shadow-[0_8px_24px_rgba(0,0,0,.12)]">
+      {open && (
+        <span className="absolute start-0 top-[32px] z-10 grid w-[118px] grid-cols-4 gap-1 rounded-xl border border-[color:var(--m-rowbr)] bg-[color:var(--m-sheetop)] p-2 shadow-[0_8px_24px_rgba(0,0,0,.12)]">
           {CALENDAR_COLORS.map(c => (
             <button
               key={c}
               type="button"
-              onClick={() => { onPick(c); setOpenPalette(false) }}
+              aria-label={c}
+              onClick={() => { onPick(c); onOpenChange(false) }}
               className={`h-[22px] w-[22px] rounded-md ${c === color ? 'ring-2 ring-[color:var(--m-ink)]' : ''}`}
               style={{ background: c }}
             />
@@ -427,10 +447,12 @@ function ColorSwatch({ color, onPick }: { color: string; onPick: (color: string)
   )
 }
 
-function CalendarEditor({ cal, countries, calendarType = 'public_holiday', onUpdate, onDelete }: {
+function CalendarEditor({ cal, countries, calendarType = 'public_holiday', colorPickerOpen, onColorPickerOpenChange, onUpdate, onDelete }: {
   cal: VacayHolidayCalendar
   countries: Option[]
   calendarType?: 'public_holiday' | 'school_holiday'
+  colorPickerOpen: boolean
+  onColorPickerOpenChange: (open: boolean) => void
   onUpdate: (data: { region?: string; color?: string; label?: string | null }) => void
   onDelete: () => void
 }) {
@@ -446,7 +468,7 @@ function CalendarEditor({ cal, countries, calendarType = 'public_holiday', onUpd
   return (
     <div className="mt-2 rounded-[14px] border border-[color:var(--m-rowbr)] bg-[color:var(--m-ic)] p-3">
       <div className="flex items-center gap-[9px]">
-        <ColorSwatch color={cal.color} onPick={c => { if (c !== cal.color) onUpdate({ color: c }) }} />
+        <ColorSwatch color={cal.color} open={colorPickerOpen} onOpenChange={onColorPickerOpenChange} onPick={c => { if (c !== cal.color) onUpdate({ color: c }) }} />
         <input
           value={label}
           onChange={e => setLabel(e.target.value)}
@@ -468,9 +490,11 @@ function CalendarEditor({ cal, countries, calendarType = 'public_holiday', onUpd
   )
 }
 
-function AddCalendarDraft({ countries, calendarType = 'public_holiday', onAdd, onCancel }: {
+function AddCalendarDraft({ countries, calendarType = 'public_holiday', colorPickerOpen, onColorPickerOpenChange, onAdd, onCancel }: {
   countries: Option[]
   calendarType?: 'public_holiday' | 'school_holiday'
+  colorPickerOpen: boolean
+  onColorPickerOpenChange: (open: boolean) => void
   onAdd: (data: { region: string; color: string; label: string | null }) => void
   onCancel: () => void
 }) {
@@ -491,7 +515,7 @@ function AddCalendarDraft({ countries, calendarType = 'public_holiday', onAdd, o
   return (
     <div className="mt-2 rounded-[14px] border-[1.5px] border-dashed border-[color:var(--m-rowbr)] p-3">
       <div className="flex items-center gap-[9px]">
-        <ColorSwatch color={color} onPick={setColor} />
+        <ColorSwatch color={color} open={colorPickerOpen} onOpenChange={onColorPickerOpenChange} onPick={setColor} />
         <input
           value={label}
           onChange={e => setLabel(e.target.value)}
